@@ -90,6 +90,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Dashboard user={user} />} />
             <Route path="/profile" element={<Profile user={user} setUser={setUser} />} />
+            <Route path="/ai-predictions" element={<AIPredictions user={user} />} />
             <Route path="/trading" element={<BinaryTrading user={user} setUser={setUser} />} />
             <Route path="/investments" element={<Investments user={user} />} />
             <Route path="/referrals" element={<Referrals user={user} />} />
