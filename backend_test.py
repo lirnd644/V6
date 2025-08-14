@@ -266,17 +266,43 @@ class CripteXAPITester:
             200  # Should still return 200 even if not authenticated
         )
 
+    def test_ai_predictions_endpoints_without_auth(self):
+        """Test NEW AI predictions endpoints without authentication"""
+        print("\n" + "="*50)
+        print("TESTING NEW AI PREDICTIONS ENDPOINTS (WITHOUT AUTH)")
+        print("="*50)
+        
+        # Test get AI predictions without auth (should fail)
+        self.run_test(
+            "Get AI Predictions (Unauthenticated)",
+            "GET",
+            "api/ai-predictions",
+            401
+        )
+        
+        # Test manual AI prediction generation without auth (should fail)
+        self.run_test(
+            "Generate Manual AI Prediction (Unauthenticated)",
+            "POST",
+            "api/ai-predictions/manual",
+            401,
+            data={
+                "symbol": "BTC",
+                "timeframe": "1h"
+            }
+        )
+
     def test_predictions_endpoints_without_auth(self):
         """Test predictions endpoints without authentication"""
         print("\n" + "="*50)
         print("TESTING PREDICTIONS ENDPOINTS (WITHOUT AUTH)")
         print("="*50)
         
-        # Test get predictions without auth
+        # Test get binary predictions without auth
         self.run_test(
-            "Get Predictions (Unauthenticated)",
+            "Get Binary Predictions (Unauthenticated)",
             "GET",
-            "api/predictions",
+            "api/binary-predictions",
             401
         )
         
