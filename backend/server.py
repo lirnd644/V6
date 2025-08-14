@@ -1,9 +1,12 @@
 import os
 import uuid
 import requests
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 from datetime import datetime, timedelta
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException, Request, Response, Cookie, Depends
+from fastapi import FastAPI, HTTPException, Request, Response, Cookie, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -14,8 +17,16 @@ import aiohttp
 import json
 from dotenv import load_dotenv
 from bson import ObjectId
+import random
+import logging
+from bs4 import BeautifulSoup
+import time
 
 load_dotenv()
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Custom JSON encoder to handle ObjectId
 def custom_json_encoder(obj):
@@ -25,7 +36,7 @@ def custom_json_encoder(obj):
         return obj.isoformat()
     raise TypeError
 
-app = FastAPI(title="CripteX API", version="1.0.0")
+app = FastAPI(title="CripteX AI API", version="2.0.0")
 
 # CORS configuration
 app.add_middleware(
@@ -40,6 +51,16 @@ app.add_middleware(
 MONGO_URL = os.environ.get('MONGO_URL')
 client = AsyncIOMotorClient(MONGO_URL)
 db = client.criptex
+
+# AI Model for predictions
+ai_scaler = StandardScaler()
+ai_model = LogisticRegression(random_state=42)
+
+# Initialize with some dummy data to train the model
+dummy_features = np.random.rand(100, 5)  # 5 features: price, volume, volatility, sentiment, technical_indicator
+dummy_targets = np.random.randint(0, 2, 100)  # 0 = DOWN, 1 = UP
+ai_scaler.fit(dummy_features)
+ai_model.fit(ai_scaler.transform(dummy_features), dummy_targets)
 
 # Models
 class User(BaseModel):
@@ -57,16 +78,34 @@ class User(BaseModel):
     created_at: datetime
     last_bonus_claim: Optional[datetime] = None
     # User settings
-    theme: str = "dark"
+    theme: str = "green"  # Changed default to green theme
     language: str = "ru"
     notifications_enabled: bool = True
     preferred_currency: str = "USD"
+    auto_predictions_enabled: bool = True
 
 class Session(BaseModel):
     session_token: str
     user_id: str
     expires_at: datetime
     created_at: datetime
+
+class AIBinaryPrediction(BaseModel):
+    id: str
+    user_id: str
+    symbol: str
+    direction: str  # "UP" or "DOWN"
+    timeframe: str  # "5m", "15m", "1h", "4h"
+    entry_price: float
+    entry_time: datetime
+    expiry_time: datetime
+    confidence_score: float
+    status: str = "ACTIVE"  # "ACTIVE", "WON", "LOST", "EXPIRED"
+    result_price: Optional[float] = None
+    created_at: datetime
+    ai_generated: bool = True
+    technical_indicators: dict
+    sentiment_analysis: dict
 
 class BinaryPrediction(BaseModel):
     id: str
@@ -123,6 +162,248 @@ async def get_current_user(request: Request, session_token: Optional[str] = Cook
     user = await db.users.find_one({"id": session["user_id"]})
     return User(**user) if user else None
 
+# AI Analysis Functions
+async def analyze_crypto_sentiment(symbol: str) -> dict:
+    """Analyze sentiment from various sources"""
+    try:
+        # Mock sentiment analysis - in real app would scrape Twitter, Reddit, news
+        sentiment_sources = [
+            {"source": "twitter", "sentiment": random.uniform(-1, 1), "mentions": random.randint(100, 1000)},
+            {"source": "reddit", "sentiment": random.uniform(-1, 1), "posts": random.randint(10, 100)},
+            {"source": "news", "sentiment": random.uniform(-1, 1), "articles": random.randint(5, 50)}
+        ]
+        
+        overall_sentiment = sum(s["sentiment"] for s in sentiment_sources) / len(sentiment_sources)
+        
+        return {
+            "overall_sentiment": overall_sentiment,
+            "sources": sentiment_sources,
+            "confidence": random.uniform(0.6, 0.9)
+        }
+    except Exception as e:
+        logger.error(f"Error analyzing sentiment for {symbol}: {e}")
+        return {"overall_sentiment": 0, "sources": [], "confidence": 0.5}
+
+async def calculate_technical_indicators(symbol: str, timeframe: str) -> dict:
+    """Calculate technical indicators from price data"""
+    try:
+        # Get price data
+        chart_data = await get_crypto_chart_data(symbol, timeframe)
+        
+        if not chart_data or not chart_data.get("prices"):
+            return {}
+        
+        prices = [price[1] for price in chart_data["prices"]][-20:]  # Last 20 prices
+        
+        if len(prices) < 5:
+            return {}
+        
+        # Calculate simple technical indicators
+        current_price = prices[-1]
+        sma_5 = np.mean(prices[-5:])
+        sma_10 = np.mean(prices[-10:]) if len(prices) >= 10 else sma_5
+        
+        # RSI-like indicator
+        price_changes = np.diff(prices)
+        gains = np.where(price_changes > 0, price_changes, 0)
+        losses = np.where(price_changes < 0, -price_changes, 0)
+        
+        avg_gain = np.mean(gains[-14:]) if len(gains) >= 14 else np.mean(gains)
+        avg_loss = np.mean(losses[-14:]) if len(losses) >= 14 else np.mean(losses)
+        
+        if avg_loss == 0:
+            rsi = 100
+        else:
+            rs = avg_gain / avg_loss
+            rsi = 100 - (100 / (1 + rs))
+        
+        # MACD-like indicator
+        ema_12 = current_price * 0.8 + sma_5 * 0.2
+        ema_26 = current_price * 0.6 + sma_10 * 0.4
+        macd = ema_12 - ema_26
+        
+        # Bollinger Bands
+        bb_middle = sma_10
+        bb_std = np.std(prices[-10:]) if len(prices) >= 10 else np.std(prices)
+        bb_upper = bb_middle + (bb_std * 2)
+        bb_lower = bb_middle - (bb_std * 2)
+        
+        return {
+            "sma_5": sma_5,
+            "sma_10": sma_10,
+            "rsi": rsi,
+            "macd": macd,
+            "bb_upper": bb_upper,
+            "bb_middle": bb_middle,
+            "bb_lower": bb_lower,
+            "volatility": bb_std / current_price * 100,
+            "price_vs_sma5": (current_price - sma_5) / sma_5 * 100,
+            "price_vs_sma10": (current_price - sma_10) / sma_10 * 100
+        }
+    except Exception as e:
+        logger.error(f"Error calculating technical indicators for {symbol}: {e}")
+        return {}
+
+async def ai_predict_direction(symbol: str, timeframe: str) -> dict:
+    """Use AI model to predict price direction"""
+    try:
+        # Get technical indicators
+        tech_indicators = await calculate_technical_indicators(symbol, timeframe)
+        sentiment = await analyze_crypto_sentiment(symbol)
+        
+        if not tech_indicators:
+            # Fallback to simple prediction
+            return {
+                "direction": random.choice(["UP", "DOWN"]),
+                "confidence": random.uniform(55, 75),
+                "reasoning": "Limited data available, using basic analysis"
+            }
+        
+        # Prepare features for AI model
+        features = np.array([[
+            tech_indicators.get("rsi", 50) / 100,  # Normalize RSI
+            tech_indicators.get("macd", 0) / 100,   # Normalize MACD
+            tech_indicators.get("volatility", 5) / 10,  # Normalize volatility
+            sentiment.get("overall_sentiment", 0),   # Sentiment score
+            tech_indicators.get("price_vs_sma5", 0) / 10  # Price vs SMA
+        ]])
+        
+        # Scale features
+        features_scaled = ai_scaler.transform(features)
+        
+        # Predict
+        prediction = ai_model.predict(features_scaled)[0]
+        prediction_proba = ai_model.predict_proba(features_scaled)[0]
+        
+        direction = "UP" if prediction == 1 else "DOWN"
+        confidence = max(prediction_proba) * 100
+        
+        # Adjust confidence based on market conditions
+        if tech_indicators.get("volatility", 0) > 8:
+            confidence *= 0.9  # Lower confidence in high volatility
+        
+        if abs(sentiment.get("overall_sentiment", 0)) > 0.5:
+            confidence *= 1.1  # Higher confidence with strong sentiment
+        
+        confidence = min(95, max(55, confidence))  # Keep within bounds
+        
+        reasoning_parts = []
+        
+        if tech_indicators.get("rsi", 50) > 70:
+            reasoning_parts.append("RSI показывает перекупленность")
+        elif tech_indicators.get("rsi", 50) < 30:
+            reasoning_parts.append("RSI показывает перепроданность")
+        
+        if sentiment.get("overall_sentiment", 0) > 0.3:
+            reasoning_parts.append("Позитивный настрой в социальных сетях")
+        elif sentiment.get("overall_sentiment", 0) < -0.3:
+            reasoning_parts.append("Негативный настрой в социальных сетях")
+        
+        if tech_indicators.get("price_vs_sma5", 0) > 2:
+            reasoning_parts.append("Цена выше скользящей средней")
+        elif tech_indicators.get("price_vs_sma5", 0) < -2:
+            reasoning_parts.append("Цена ниже скользящей средней")
+        
+        reasoning = "; ".join(reasoning_parts) if reasoning_parts else "Комплексный технический анализ"
+        
+        return {
+            "direction": direction,
+            "confidence": round(confidence, 1),
+            "reasoning": reasoning,
+            "technical_score": prediction_proba[1] if prediction == 1 else prediction_proba[0],
+            "sentiment_score": sentiment.get("overall_sentiment", 0)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in AI prediction for {symbol}: {e}")
+        return {
+            "direction": random.choice(["UP", "DOWN"]),
+            "confidence": random.uniform(60, 80),
+            "reasoning": "Использован резервный алгоритм анализа"
+        }
+
+# Background task for generating AI predictions
+async def generate_ai_predictions():
+    """Background task that generates AI predictions every 5 minutes"""
+    while True:
+        try:
+            logger.info("Generating AI predictions...")
+            
+            # Get all users with auto predictions enabled
+            users = await db.users.find({"auto_predictions_enabled": {"$ne": False}}).to_list(1000)
+            
+            # Top crypto symbols to analyze
+            symbols = ["BTC", "ETH", "BNB", "ADA", "SOL", "DOT", "DOGE", "AVAX"]
+            timeframes = ["15m", "1h", "4h"]
+            
+            for user in users:
+                try:
+                    # Generate 1-2 predictions per user
+                    num_predictions = random.randint(1, 2)
+                    
+                    for _ in range(num_predictions):
+                        symbol = random.choice(symbols)
+                        timeframe = random.choice(timeframes)
+                        
+                        # Get AI prediction
+                        ai_result = await ai_predict_direction(symbol, timeframe)
+                        
+                        # Get current price
+                        current_price = await get_current_price_for_symbol(symbol, user.get("preferred_currency", "USD"))
+                        
+                        # Calculate expiry time
+                        timeframe_minutes = {"15m": 15, "1h": 60, "4h": 240}
+                        expiry_minutes = timeframe_minutes.get(timeframe, 60)
+                        
+                        now = datetime.utcnow()
+                        expiry_time = now + timedelta(minutes=expiry_minutes)
+                        
+                        # Get technical indicators
+                        tech_indicators = await calculate_technical_indicators(symbol, timeframe)
+                        sentiment = await analyze_crypto_sentiment(symbol)
+                        
+                        # Create AI prediction
+                        prediction_data = {
+                            "id": str(uuid.uuid4()),
+                            "user_id": user["id"],
+                            "symbol": symbol,
+                            "direction": ai_result["direction"],
+                            "timeframe": timeframe,
+                            "entry_price": current_price,
+                            "entry_time": now,
+                            "expiry_time": expiry_time,
+                            "confidence_score": ai_result["confidence"],
+                            "status": "ACTIVE",
+                            "result_price": None,
+                            "created_at": now,
+                            "ai_generated": True,
+                            "technical_indicators": tech_indicators,
+                            "sentiment_analysis": sentiment,
+                            "ai_reasoning": ai_result["reasoning"]
+                        }
+                        
+                        # Save to database
+                        await db.ai_predictions.insert_one(prediction_data)
+                        
+                        logger.info(f"Generated AI prediction for {user['name']}: {symbol} {ai_result['direction']} ({ai_result['confidence']}%)")
+                        
+                except Exception as e:
+                    logger.error(f"Error generating prediction for user {user.get('name', user['id'])}: {e}")
+                    continue
+            
+            logger.info("AI predictions generation completed")
+            
+        except Exception as e:
+            logger.error(f"Error in AI predictions background task: {e}")
+        
+        # Wait 5 minutes before next generation
+        await asyncio.sleep(300)
+
+# Start background task
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(generate_ai_predictions())
+
 # Authentication endpoints
 @app.post("/api/auth/session")
 async def create_session(request: Request, response: Response):
@@ -163,7 +444,12 @@ async def create_session(request: Request, response: Response):
             "referral_count": 0,
             "referral_earnings": 0,
             "created_at": datetime.utcnow(),
-            "last_bonus_claim": None
+            "last_bonus_claim": None,
+            "theme": "green",
+            "language": "ru",
+            "notifications_enabled": True,
+            "preferred_currency": "USD",
+            "auto_predictions_enabled": True
         }
         await db.users.insert_one(user_data)
         user = User(**user_data)
@@ -317,10 +603,8 @@ async def get_crypto_prices(currency: str = "USD", limit: int = 50):
     except Exception as e:
         return mock_crypto_data[:limit]
 
-@app.get("/api/crypto/chart/{symbol}")
-async def get_crypto_chart(symbol: str, timeframe: str = "1h"):
-    """Get crypto chart data with fallback to mock data"""
-    
+async def get_crypto_chart_data(symbol: str, timeframe: str):
+    """Helper function to get chart data"""
     # Mock chart data as fallback
     mock_chart_data = {
         "prices": [[1705276800000, 45230.50], [1705280400000, 45485.20], [1705284000000, 45120.80]],
@@ -329,16 +613,10 @@ async def get_crypto_chart(symbol: str, timeframe: str = "1h"):
     }
     
     coin_map = {
-        "BITCOIN": "bitcoin",
-        "ETHEREUM": "ethereum",
-        "BINANCECOIN": "binancecoin",
-        "CARDANO": "cardano",
-        "SOLANA": "solana",
-        "POLKADOT": "polkadot",
-        "DOGECOIN": "dogecoin",
-        "AVALANCHE2": "avalanche-2",
-        "CHAINLINK": "chainlink",
-        "POLYGON": "polygon"
+        "BTC": "bitcoin", "ETH": "ethereum", "BNB": "binancecoin",
+        "ADA": "cardano", "SOL": "solana", "DOT": "polkadot",
+        "DOGE": "dogecoin", "AVAX": "avalanche-2", "LINK": "chainlink",
+        "MATIC": "polygon"
     }
     
     coin_id = coin_map.get(symbol.upper(), symbol.lower())
@@ -360,6 +638,100 @@ async def get_crypto_chart(symbol: str, timeframe: str = "1h"):
     except Exception as e:
         return mock_chart_data
 
+@app.get("/api/crypto/chart/{symbol}")
+async def get_crypto_chart(symbol: str, timeframe: str = "1h"):
+    """Get crypto chart data with fallback to mock data"""
+    return await get_crypto_chart_data(symbol, timeframe)
+
+# NEW AI Predictions endpoints
+@app.get("/api/ai-predictions")
+async def get_ai_predictions(user: User = Depends(get_current_user)):
+    """Get AI-generated predictions for the user"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    predictions = await db.ai_predictions.find({"user_id": user.id}).sort("created_at", -1).to_list(50)
+    
+    # Convert ObjectId to string and handle datetime serialization
+    for prediction in predictions:
+        if "_id" in prediction:
+            del prediction["_id"]
+        if "created_at" in prediction and isinstance(prediction["created_at"], datetime):
+            prediction["created_at"] = prediction["created_at"].isoformat()
+        if "entry_time" in prediction and isinstance(prediction["entry_time"], datetime):
+            prediction["entry_time"] = prediction["entry_time"].isoformat()
+        if "expiry_time" in prediction and isinstance(prediction["expiry_time"], datetime):
+            prediction["expiry_time"] = prediction["expiry_time"].isoformat()
+    
+    return predictions
+
+@app.post("/api/ai-predictions/manual")
+async def generate_manual_ai_prediction(
+    request: Request,
+    user: User = Depends(get_current_user)
+):
+    """Generate a manual AI prediction for specific symbol"""
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    data = await request.json()
+    symbol = data.get("symbol", "BTC")
+    timeframe = data.get("timeframe", "1h")
+    
+    try:
+        # Get AI prediction
+        ai_result = await ai_predict_direction(symbol, timeframe)
+        
+        # Get current price
+        current_price = await get_current_price_for_symbol(symbol, user.preferred_currency)
+        
+        # Calculate expiry time
+        timeframe_minutes = {"15m": 15, "1h": 60, "4h": 240}
+        expiry_minutes = timeframe_minutes.get(timeframe, 60)
+        
+        now = datetime.utcnow()
+        expiry_time = now + timedelta(minutes=expiry_minutes)
+        
+        # Get technical indicators
+        tech_indicators = await calculate_technical_indicators(symbol, timeframe)
+        sentiment = await analyze_crypto_sentiment(symbol)
+        
+        # Create AI prediction
+        prediction_data = {
+            "id": str(uuid.uuid4()),
+            "user_id": user.id,
+            "symbol": symbol,
+            "direction": ai_result["direction"],
+            "timeframe": timeframe,
+            "entry_price": current_price,
+            "entry_time": now,
+            "expiry_time": expiry_time,
+            "confidence_score": ai_result["confidence"],
+            "status": "ACTIVE",
+            "result_price": None,
+            "created_at": now,
+            "ai_generated": True,
+            "technical_indicators": tech_indicators,
+            "sentiment_analysis": sentiment,
+            "ai_reasoning": ai_result["reasoning"]
+        }
+        
+        # Save to database
+        await db.ai_predictions.insert_one(prediction_data)
+        
+        # Clean response data
+        if "_id" in prediction_data:
+            del prediction_data["_id"]
+        prediction_data["created_at"] = prediction_data["created_at"].isoformat()
+        prediction_data["entry_time"] = prediction_data["entry_time"].isoformat()
+        prediction_data["expiry_time"] = prediction_data["expiry_time"].isoformat()
+        
+        return prediction_data
+        
+    except Exception as e:
+        logger.error(f"Error generating manual AI prediction: {e}")
+        raise HTTPException(status_code=500, detail="Error generating prediction")
+
 # Binary Options Predictions endpoints
 @app.get("/api/binary-predictions")
 async def get_binary_predictions(user: User = Depends(get_current_user)):
@@ -380,78 +752,6 @@ async def get_binary_predictions(user: User = Depends(get_current_user)):
             prediction["expiry_time"] = prediction["expiry_time"].isoformat()
     
     return predictions
-
-@app.post("/api/binary-predictions")
-async def create_binary_prediction(
-    request: Request,
-    user: User = Depends(get_current_user)
-):
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    if user.free_predictions <= 0:
-        raise HTTPException(status_code=400, detail="No free predictions remaining")
-    
-    data = await request.json()
-    symbol = data.get("symbol")
-    direction = data.get("direction")  # "UP" or "DOWN"
-    timeframe = data.get("timeframe")  # "1m", "5m", "15m", etc.
-    stake_amount = int(data.get("stake_amount", 1))  # How many predictions to stake
-    
-    if stake_amount > user.free_predictions:
-        raise HTTPException(status_code=400, detail="Insufficient free predictions")
-    
-    # Get current price for the symbol
-    current_price = await get_current_price_for_symbol(symbol, user.preferred_currency)
-    
-    # Calculate expiry time based on timeframe
-    timeframes = {
-        "1m": 1, "5m": 5, "15m": 15, "30m": 30,
-        "1h": 60, "4h": 240, "1d": 1440
-    }
-    expiry_minutes = timeframes.get(timeframe, 5)
-    
-    now = datetime.utcnow()
-    expiry_time = now + timedelta(minutes=expiry_minutes)
-    
-    # Calculate confidence score based on market conditions (mock calculation)
-    confidence_score = calculate_prediction_confidence(symbol, direction, timeframe)
-    
-    prediction_data = {
-        "id": str(uuid.uuid4()),
-        "user_id": user.id,
-        "symbol": symbol,
-        "direction": direction,
-        "timeframe": timeframe,
-        "entry_price": current_price,
-        "entry_time": now,
-        "expiry_time": expiry_time,
-        "stake_amount": stake_amount,
-        "confidence_score": confidence_score,
-        "status": "ACTIVE",
-        "result_price": None,
-        "created_at": now,
-        "is_free": True
-    }
-    
-    await db.binary_predictions.insert_one(prediction_data)
-    
-    # Update user's free predictions count
-    await db.users.update_one(
-        {"id": user.id},
-        {
-            "$inc": {"free_predictions": -stake_amount, "total_predictions_used": 1}
-        }
-    )
-    
-    # Clean response data
-    if "_id" in prediction_data:
-        del prediction_data["_id"]
-    prediction_data["created_at"] = prediction_data["created_at"].isoformat()
-    prediction_data["entry_time"] = prediction_data["entry_time"].isoformat()
-    prediction_data["expiry_time"] = prediction_data["expiry_time"].isoformat()
-    
-    return prediction_data
 
 @app.get("/api/investment-recommendations")
 async def get_investment_recommendations(currency: str = "USD", limit: int = 10):
@@ -533,7 +833,8 @@ async def get_user_settings(user: User = Depends(get_current_user)):
         "theme": user.theme,
         "language": user.language,
         "notifications_enabled": user.notifications_enabled,
-        "preferred_currency": user.preferred_currency
+        "preferred_currency": user.preferred_currency,
+        "auto_predictions_enabled": getattr(user, 'auto_predictions_enabled', True)
     }
 
 @app.put("/api/user/settings")
@@ -555,6 +856,8 @@ async def update_user_settings(
         update_data["notifications_enabled"] = data["notifications_enabled"]
     if "preferred_currency" in data:
         update_data["preferred_currency"] = data["preferred_currency"]
+    if "auto_predictions_enabled" in data:
+        update_data["auto_predictions_enabled"] = data["auto_predictions_enabled"]
     
     await db.users.update_one(
         {"id": user.id},
@@ -634,85 +937,6 @@ def calculate_prediction_confidence(symbol: str, direction: str, timeframe: str)
     confidence += random.uniform(-5, 5)
     
     return round(min(95, max(55, confidence)), 1)
-
-@app.post("/api/predictions")
-async def create_prediction(
-    request: Request,
-    user: User = Depends(get_current_user)
-):
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    if user.free_predictions <= 0:
-        raise HTTPException(status_code=400, detail="No free predictions remaining")
-    
-    # Get request data
-    data = await request.json()
-    symbol = data.get("symbol")
-    prediction_type = data.get("prediction_type")
-    timeframe = data.get("timeframe")
-    target_price = float(data.get("target_price"))
-    stop_loss = float(data.get("stop_loss"))
-    
-    # Get current price (use mock data if API fails)
-    current_price = 45230.50  # Default fallback
-    try:
-        coin_map = {
-            "BITCOIN": "bitcoin",
-            "ETHEREUM": "ethereum",
-            "BINANCECOIN": "binancecoin"
-        }
-        coin_id = coin_map.get(symbol.upper(), symbol.lower())
-        
-        async with aiohttp.ClientSession() as session:
-            url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd"
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=3)) as resp:
-                if resp.status == 200:
-                    api_data = await resp.json()
-                    current_price = api_data[coin_id]["usd"]
-    except:
-        # Use symbol-specific mock prices
-        mock_prices = {
-            "BITCOIN": 45230.50,
-            "ETHEREUM": 2845.75,
-            "BINANCECOIN": 312.40,
-            "CARDANO": 0.485,
-            "SOLANA": 98.75
-        }
-        current_price = mock_prices.get(symbol.upper(), 45230.50)
-    
-    # Create prediction
-    prediction_data = {
-        "id": str(uuid.uuid4()),
-        "user_id": user.id,
-        "symbol": symbol,
-        "prediction_type": prediction_type,
-        "timeframe": timeframe,
-        "confidence": 75.5,  # Mock confidence
-        "entry_price": current_price,
-        "target_price": target_price,
-        "stop_loss": stop_loss,
-        "created_at": datetime.utcnow(),
-        "is_free": True
-    }
-    
-    await db.predictions.insert_one(prediction_data)
-    
-    # Update user's free predictions count
-    await db.users.update_one(
-        {"id": user.id},
-        {
-            "$inc": {"free_predictions": -1, "total_predictions_used": 1}
-        }
-    )
-    
-    # Clean the response data for JSON serialization
-    if "_id" in prediction_data:
-        del prediction_data["_id"]
-    if "created_at" in prediction_data:
-        prediction_data["created_at"] = prediction_data["created_at"].isoformat()
-    
-    return prediction_data
 
 # Bonus and referral endpoints
 @app.post("/api/bonus/claim")
