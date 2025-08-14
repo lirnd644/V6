@@ -13,6 +13,7 @@ import Referrals from './components/Referrals';
 import Bonus from './components/Bonus';
 import Settings from './components/Settings';
 import Login from './components/Login';
+import AIPredictions from './components/AIPredictions';
 
 const App = () => {
   const [user, setUser] = useState(null);
