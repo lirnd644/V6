@@ -8,8 +8,8 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-  color: #f8fafc;
+  background: linear-gradient(135deg, #0a1a0a 0%, #1a2d1a 30%, #0d1f0d 70%, #000a00 100%);
+  color: #f0fdf4;
   overflow-x: hidden;
 }
 
@@ -17,49 +17,57 @@ body {
   font-family: 'Orbitron', monospace;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Green/Gold Theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(10, 26, 10, 0.3);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #06b6d4, #3b82f6);
+  background: linear-gradient(45deg, #22c55e, #eab308);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #0891b2, #2563eb);
+  background: linear-gradient(45deg, #16a34a, #ca8a04);
 }
 
-/* Glass morphism effect */
+/* Glass morphism effect - Green Theme */
 .glass {
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(10, 26, 10, 0.4);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(34, 197, 94, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 20, 0, 0.3);
 }
 
 .glass-card {
-  background: rgba(30, 41, 59, 0.6);
+  background: rgba(26, 45, 26, 0.6);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  box-shadow: 0 4px 24px rgba(0, 20, 0, 0.2);
   border-radius: 16px;
 }
 
-/* Gradient text */
+/* Gradient text - Green/Gold */
 .gradient-text {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #a855f7 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #eab308 50%, #f59e0b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Crypto price card animations */
+/* AI Prediction specific gradient */
+.ai-gradient-text {
+  background: linear-gradient(135deg, #10b981 0%, #fbbf24 50%, #22c55e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Crypto price card animations - Green Theme */
 .crypto-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -73,7 +81,7 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.1), transparent);
   transition: left 0.6s;
 }
 
@@ -83,12 +91,12 @@ body {
 
 .crypto-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2);
+  box-shadow: 0 12px 40px rgba(34, 197, 94, 0.2);
 }
 
-/* Button styles */
+/* Button styles - Green/Gold Theme */
 .btn-primary {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #eab308 100%);
   border: none;
   color: white;
   padding: 12px 24px;
@@ -96,18 +104,18 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
 }
 
 .btn-secondary {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(6, 182, 212, 0.3);
-  color: #06b6d4;
+  background: rgba(10, 26, 10, 0.8);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
   padding: 12px 24px;
   border-radius: 12px;
   font-weight: 600;
@@ -116,23 +124,62 @@ body {
 }
 
 .btn-secondary:hover {
-  background: rgba(6, 182, 212, 0.1);
-  border-color: #06b6d4;
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
   transform: translateY(-1px);
 }
 
-/* Success and danger colors */
+/* AI Button - Special Style */
+.btn-ai {
+  background: linear-gradient(135deg, #10b981 0%, #fbbf24 50%, #22c55e 100%);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ai::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s;
+}
+
+.btn-ai:hover::before {
+  left: 100%;
+}
+
+.btn-ai:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
+/* Success and danger colors - Green Theme */
 .text-success {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .text-danger {
   color: #ef4444;
 }
 
+.text-gold {
+  color: #eab308;
+}
+
 .bg-success {
-  background-color: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.3);
+  background-color: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
 }
 
 .bg-danger {
@@ -140,33 +187,55 @@ body {
   border-color: rgba(239, 68, 68, 0.3);
 }
 
-/* Loading animations */
-.pulse-glow {
-  animation: pulse-glow 2s infinite;
+.bg-gold {
+  background-color: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.3);
 }
 
-@keyframes pulse-glow {
+/* Loading animations - Green Theme */
+.pulse-glow {
+  animation: pulse-glow-green 2s infinite;
+}
+
+@keyframes pulse-glow-green {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(6, 182, 212, 0.6);
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.6);
   }
 }
 
-/* Chart container */
+/* AI Pulse Animation */
+.ai-pulse {
+  animation: ai-pulse 3s infinite;
+}
+
+@keyframes ai-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+  33% {
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
+  }
+  66% {
+    box-shadow: 0 0 25px rgba(34, 197, 94, 0.5);
+  }
+}
+
+/* Chart container - Green Theme */
 .chart-container {
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(10, 26, 10, 0.8);
   border-radius: 16px;
   padding: 24px;
   margin: 20px 0;
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.1);
 }
 
-/* Prediction cards */
+/* Prediction cards - Green Theme */
 .prediction-card {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: linear-gradient(135deg, rgba(26, 45, 26, 0.8) 0%, rgba(10, 26, 10, 0.9) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
   border-radius: 16px;
   padding: 20px;
   margin: 12px 0;
@@ -174,14 +243,47 @@ body {
 }
 
 .prediction-card:hover {
-  border-color: rgba(6, 182, 212, 0.4);
-  box-shadow: 0 8px 32px rgba(6, 182, 212, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 8px 32px rgba(34, 197, 94, 0.15);
 }
 
-/* Statistics cards */
+/* AI Prediction cards - Special styling */
+.ai-prediction-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(251, 191, 36, 0.1) 50%, rgba(34, 197, 94, 0.1) 100%);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  padding: 24px;
+  margin: 16px 0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-prediction-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px;
+  padding: 2px;
+  background: linear-gradient(135deg, #10b981, #fbbf24, #22c55e);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: subtract;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: subtract;
+}
+
+.ai-prediction-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.2);
+}
+
+/* Statistics cards - Green Theme */
 .stat-card {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-  border: 1px solid rgba(6, 182, 212, 0.3);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(234, 179, 8, 0.1) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
   border-radius: 16px;
   padding: 24px;
   text-align: center;
@@ -190,28 +292,65 @@ body {
 
 .stat-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2);
+  box-shadow: 0 12px 40px rgba(34, 197, 94, 0.2);
 }
 
-/* Referral code styling */
+/* AI Stats card */
+.ai-stat-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(251, 191, 36, 0.15) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.ai-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.25);
+}
+
+/* Referral code styling - Green Theme */
 .referral-code {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  border: 2px solid #06b6d4;
+  background: linear-gradient(135deg, #1a2d1a 0%, #0d1f0d 100%);
+  border: 2px solid #22c55e;
   border-radius: 12px;
   padding: 16px;
   font-family: 'Orbitron', monospace;
   font-weight: 600;
   font-size: 18px;
   text-align: center;
-  color: #06b6d4;
+  color: #22c55e;
   letter-spacing: 2px;
 }
 
-/* Navigation active state */
+/* Navigation active state - Green Theme */
 .nav-active {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
-  border: 1px solid rgba(6, 182, 212, 0.4);
-  color: #06b6d4;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(234, 179, 8, 0.2) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #22c55e;
+}
+
+/* AI Status Indicator */
+.ai-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(251, 191, 36, 0.2));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.ai-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: ai-pulse 2s infinite;
 }
 
 /* Responsive design */
@@ -227,6 +366,11 @@ body {
   
   .crypto-card {
     margin: 8px 0;
+  }
+  
+  .ai-prediction-card {
+    padding: 16px;
+    margin: 12px 0;
   }
 }
 
@@ -261,13 +405,29 @@ body {
   animation: slideInRight 0.6s ease-out;
 }
 
-/* Form styles */
+/* AI Slide Animation */
+@keyframes aiSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.ai-slide-in {
+  animation: aiSlideIn 0.8s ease-out;
+}
+
+/* Form styles - Green Theme */
 .form-input {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(10, 26, 10, 0.8);
+  border: 1px solid rgba(34, 197, 94, 0.3);
   border-radius: 12px;
   padding: 16px;
-  color: #f8fafc;
+  color: #f0fdf4;
   width: 100%;
   font-size: 16px;
   transition: all 0.3s ease;
@@ -275,16 +435,16 @@ body {
 
 .form-input:focus {
   outline: none;
-  border-color: #06b6d4;
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+  border-color: #22c55e;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
 }
 
 .form-select {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(10, 26, 10, 0.8);
+  border: 1px solid rgba(34, 197, 94, 0.3);
   border-radius: 12px;
   padding: 16px;
-  color: #f8fafc;
+  color: #f0fdf4;
   width: 100%;
   font-size: 16px;
   cursor: pointer;
@@ -293,15 +453,15 @@ body {
 
 .form-select:focus {
   outline: none;
-  border-color: #06b6d4;
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+  border-color: #22c55e;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
 }
 
-/* Custom checkbox */
+/* Custom checkbox - Green Theme */
 .custom-checkbox {
   appearance: none;
-  background: rgba(15, 23, 42, 0.8);
-  border: 2px solid rgba(148, 163, 184, 0.3);
+  background: rgba(10, 26, 10, 0.8);
+  border: 2px solid rgba(34, 197, 94, 0.3);
   border-radius: 6px;
   width: 20px;
   height: 20px;
@@ -310,8 +470,8 @@ body {
 }
 
 .custom-checkbox:checked {
-  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-  border-color: #06b6d4;
+  background: linear-gradient(135deg, #22c55e 0%, #eab308 100%);
+  border-color: #22c55e;
 }
 
 .custom-checkbox:checked::after {
@@ -323,4 +483,140 @@ body {
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+/* AI Notification Badge */
+.ai-notification {
+  position: relative;
+}
+
+.ai-notification::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #10b981, #fbbf24);
+  border-radius: 50%;
+  border: 2px solid #0a1a0a;
+  animation: ai-pulse 2s infinite;
+}
+
+/* Loading Spinner - Green Theme */
+.spinner-green {
+  border: 3px solid rgba(34, 197, 94, 0.1);
+  border-top: 3px solid #22c55e;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* AI Analysis Progress Bar */
+.ai-progress {
+  width: 100%;
+  height: 6px;
+  background: rgba(10, 26, 10, 0.5);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ai-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #fbbf24, #22c55e);
+  border-radius: 3px;
+  animation: ai-progress 2s ease-in-out infinite;
+}
+
+@keyframes ai-progress {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
+
+/* Confidence Meter */
+.confidence-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confidence-bar {
+  width: 100px;
+  height: 8px;
+  background: rgba(34, 197, 94, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #eab308, #22c55e);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+/* Theme Toggle Switch */
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.theme-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1a2d1a, #0d1f0d);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.theme-slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 3px;
+  background: linear-gradient(135deg, #22c55e, #eab308);
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .theme-slider:before {
+  transform: translateX(26px);
+}
+
+/* Crypto Icons Enhancement */
+.crypto-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, #22c55e, #eab308) padding-box,
+              linear-gradient(135deg, #22c55e, #fbbf24) border-box;
+  transition: all 0.3s ease;
+}
+
+.crypto-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
 }
