@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { User, Target, TrendingUp, Calendar, Award, Settings } from 'lucide-react';
+import { User, Target, TrendingUp, TrendingDown, Calendar, Award, Settings } from 'lucide-react';
 
 const Profile = ({ user, setUser }) => {
   const [stats, setStats] = useState({
